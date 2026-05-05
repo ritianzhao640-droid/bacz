@@ -1,368 +1,248 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>币安长征 — 销毁即通缩 · 燃烧铸价值</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
-<style>
-/* ═══════════════════ 原有样式（略作删减，保留全部核心） ═══════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --red:#c41e1e; --red-b:#e03030; --red-l:#ff5252;
-  --gold:#daa520; --gold-l:#f0c040; --gold-d:#b8860b;
-  --earth:#5c4033; --earth-l:#7a5c47;
-  --dawn:#1a0a0a; --night:#0d0505;
-  --bg:#0d0505; --bg2:#140808; --s:#1c0c0c; --s2:#241010;
-  --b:rgba(255,255,255,0.06); --b2:rgba(255,255,255,0.1);
-  --t:#f5ece0; --m:#9a8a7a;
-  --accent:#daa520;
-}
-html{scroll-behavior:smooth}
-body{font-family:'Noto Sans SC','Outfit',sans-serif;background:var(--bg);color:var(--t);overflow-x:hidden;line-height:1.7}
-a{color:inherit;text-decoration:none}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--red);border-radius:99px}
-::selection{background:var(--red);color:#fff}
-
-/* ── 原版背景、导航、Hero、所有区块样式保留完整 ── */
-/* ... (此处省略了与原始完全相同的所有CSS，仅增加工具部分的样式) ... */
-
-/* ═══════════════════ 新增：链上侦探工具样式 ═══════════════════ */
-.scanner-section {
-  padding: 100px 0;
-  background: rgba(20,8,8,0.5);
-  position: relative;
-  z-index: 10;
-}
-.scanner-wrap {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-.scanner-card {
-  background: var(--s);
-  border: 1px solid var(--b);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s, border-color 0.3s;
-}
-.scanner-card:hover {
-  border-color: rgba(218,165,32,0.3);
-}
-.scanner-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--red), var(--gold), var(--red), transparent);
-  animation: scanLine 3s ease-in-out infinite;
-}
-.input-group {
-  margin-bottom: 20px;
-}
-.input-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--t);
-}
-.scanner-input, .scanner-textarea {
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--b2);
-  background: var(--bg2);
-  color: var(--t);
-  font-family: monospace;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.scanner-input:focus, .scanner-textarea:focus {
-  border-color: var(--gold);
-}
-.scanner-textarea {
-  height: 130px;
-  resize: vertical;
-}
-.range-row {
-  display: flex;
-  gap: 16px;
-}
-.range-row .input-group {
-  flex: 1;
-}
-.scanner-btn {
-  background: linear-gradient(135deg, var(--red), #7a0a0a);
-  border: none;
-  padding: 14px 32px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 15px;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(196,30,30,0.45);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.scanner-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(196,30,30,0.65);
-}
-.scanner-btn:disabled {
-  background: #555;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-.result-box {
-  margin-top: 28px;
-  background: var(--bg2);
-  border: 1px solid var(--b);
-  border-radius: 12px;
-  padding: 24px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: monospace;
-  font-size: 13px;
-  line-height: 1.9;
-  max-height: 500px;
-  overflow-y: auto;
-  color: var(--t);
-  position: relative;
-}
-.result-box .owner-highlight {
-  color: var(--gold);
-  font-weight: 700;
-}
-.result-box .count-highlight {
-  color: var(--red-b);
-  font-weight: 700;
-}
-.progress-text {
-  color: var(--gold);
-  font-size: 14px;
-  margin: 10px 0;
-  font-weight: 500;
-}
-.error-text {
-  color: #d32f2f;
-  background: rgba(211, 47, 47, 0.1);
-  padding: 12px;
-  border-radius: 8px;
-  margin: 10px 0;
-}
-/* ── 原版所有动画、背景元素保留 ── */
-/* ... (保留原所有CSS，此处省略以简洁，实际代码中必须完整包含) ... */
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSC 代币主地址分析工具</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        button {
+            background: #f0b90b;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            color: #1e2026;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .progress {
+            color: #1976d2;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-
-<!-- ═══════════════════ 长征主题背景及全部HTML结构（保留原样） ═══════════════════ -->
-<!-- ... 原 ticker, nav, hero, tax, deflation, benefits, mech, pools, board, weight, faq 等内容 ... -->
-
-<!-- ═══════════════════ 新增：链上侦探工具 ═══════════════════ -->
-<section class="scanner-section" id="scanner">
-  <div class="scanner-wrap">
-    <div class="scanner-card rv">
-      <div class="eyebrow">🔍 链上侦探</div>
-      <h2 class="sec-h" style="margin-bottom: 8px;">代币关联地址分析</h2>
-      <p style="color: var(--m); margin-bottom: 36px; font-size: 15px;">输入任意 BSC 代币合约地址与 ABI，自动扫描所有发生过转账的钱包，并锁定合约 Owner 或交互最频繁的主地址。</p>
-      
-      <div class="input-group">
+    <div class="container">
+        <h2>🔍 BSC 代币主地址分析</h2>
+        <p style="color: #666; font-size:14px;">
+            输入代币合约地址与 ABI，自动扫描所有发生过转账的地址，并锁定合约 Owner 或交互最频繁的主地址。
+        </p>
+        
         <label>📌 代币合约地址 (BSC)</label>
-        <input type="text" id="contractAddress" class="scanner-input" placeholder="0x..." value="">
-      </div>
-      <div class="input-group">
+        <input type="text" id="contractAddress" placeholder="0x..." value="">
+        
         <label>🧬 合约 ABI (JSON 格式)</label>
-        <textarea id="abiInput" class="scanner-textarea" placeholder='[{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"}, ...]'></textarea>
-      </div>
-      <div class="range-row">
-        <div class="input-group">
-          <label>🔢 起始区块 (留空=0)</label>
-          <input type="number" id="fromBlock" class="scanner-input" placeholder="0">
+        <textarea id="abiInput" placeholder='[{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"}, ...]'></textarea>
+        
+        <label style="display: flex; align-items: center; gap: 10px;">
+            <span>🔢 扫描区块范围（留空则从 0 到最新，大范围可能较慢）</span>
+        </label>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="number" id="fromBlock" placeholder="起始区块 (留空=0)" style="flex:1;">
+            <input type="number" id="toBlock" placeholder="结束区块 (留空=最新)" style="flex:1;">
         </div>
-        <div class="input-group">
-          <label>🔢 结束区块 (留空=最新)</label>
-          <input type="number" id="toBlock" class="scanner-input" placeholder="最新">
-        </div>
-      </div>
-      
-      <button id="analyzeBtn" class="scanner-btn">🔎 开始分析</button>
-      
-      <div id="progress" class="progress-text"></div>
-      <div id="result" class="result-box" style="display: none;"></div>
+        
+        <button id="analyzeBtn">开始分析</button>
+        <div id="progress" class="progress"></div>
+        <div id="result" class="result-box" style="display: none;"></div>
     </div>
-  </div>
-</section>
 
-<!-- ═══════════════════ 原CTA、Footer（保留） ═══════════════════ -->
-<!-- ... -->
-
-<!-- ═══════════════════ 原脚本修改：加入分析逻辑 ═══════════════════ -->
-<script>
-// ── 原 ticker, reveal, nav, smooth scroll, tilt 等逻辑保持不变 ──
-// ... (原脚本内容)
-
-// ═══════════════════ 新增：代币分析工具逻辑 ═══════════════════
-(async () => {
-    const BSC_RPC = "https://bsc-dataseed1.binance.org/";
-    const provider = new ethers.providers.JsonRpcProvider(BSC_RPC);
-    
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const progressDiv = document.getElementById('progress');
-    const resultDiv = document.getElementById('result');
-    const contractInput = document.getElementById('contractAddress');
-    const abiInput = document.getElementById('abiInput');
-    const fromBlockInput = document.getElementById('fromBlock');
-    const toBlockInput = document.getElementById('toBlock');
-    
-    analyzeBtn.addEventListener('click', async () => {
-        const address = contractInput.value.trim();
-        const abiText = abiInput.value.trim();
-        
-        progressDiv.textContent = '';
-        resultDiv.style.display = 'none';
-        resultDiv.textContent = '';
-        resultDiv.className = 'result-box'; // 重置样式
-        
-        // 校验地址
-        if (!ethers.utils.isAddress(address)) {
-            showError('请输入有效的 BSC 合约地址');
-            return;
-        }
-        
-        // 解析 ABI
-        let abi;
-        try {
-            abi = JSON.parse(abiText);
-        } catch (e) {
-            showError('ABI 格式错误，请输入合法的 JSON');
-            return;
-        }
-        
-        analyzeBtn.disabled = true;
-        analyzeBtn.textContent = '⏳ 分析中...';
-        
-        try {
-            const contract = new ethers.Contract(address, abi, provider);
+    <script>
+        (async () => {
+            const BSC_RPC = "https://bsc-dataseed1.binance.org/";
+            const provider = new ethers.providers.JsonRpcProvider(BSC_RPC);
             
-            // 1. 寻找 Owner 函数
-            progressDiv.textContent = '🔎 正在查找 Owner 函数...';
-            let ownerAddress = null;
-            const ownerCandidates = ['owner', 'getOwner', 'admin', 'governance'];
-            for (const funcName of ownerCandidates) {
-                try {
-                    if (contract[funcName]) {
-                        const result = await contract[funcName]();
-                        if (result && ethers.utils.isAddress(result)) {
-                            ownerAddress = result;
-                            break;
-                        }
-                    }
-                } catch (e) { /* 忽略未找到的函数 */ }
-            }
-            
-            // 2. 确定区块范围
-            const currentBlock = await provider.getBlockNumber();
-            const fromBlock = fromBlockInput.value ? parseInt(fromBlockInput.value) : 0;
-            const toBlock = toBlockInput.value ? parseInt(toBlockInput.value) : currentBlock;
-            
-            if (fromBlock > toBlock) {
-                showError('起始区块不能大于结束区块');
-                resetButton();
-                return;
-            }
-            
-            progressDiv.textContent = `📦 正在扫描区块 ${fromBlock} 至 ${toBlock}，共计 ${toBlock - fromBlock} 个区块...`;
-            
-            // 3. 获取 Transfer 事件
-            const transferTopic = ethers.utils.id("Transfer(address,address,uint256)");
-            const filter = {
-                address: address,
-                topics: [transferTopic],
-                fromBlock: fromBlock,
-                toBlock: toBlock
-            };
-            
-            const logs = await provider.getLogs(filter);
-            progressDiv.textContent = `✅ 共获取 ${logs.length} 条 Transfer 记录，正在统计地址...`;
-            
-            // 4. 统计地址出现次数
-            const addressCount = new Map();
-            logs.forEach(log => {
-                const fromAddr = ethers.utils.getAddress('0x' + log.topics[1].slice(26));
-                const toAddr = ethers.utils.getAddress('0x' + log.topics[2].slice(26));
+            document.getElementById('analyzeBtn').addEventListener('click', async () => {
+                const address = document.getElementById('contractAddress').value.trim();
+                const abiText = document.getElementById('abiInput').value.trim();
+                const fromBlockInput = document.getElementById('fromBlock').value;
+                const toBlockInput = document.getElementById('toBlock').value;
                 
-                addressCount.set(fromAddr, (addressCount.get(fromAddr) || 0) + 1);
-                addressCount.set(toAddr, (addressCount.get(toAddr) || 0) + 1);
-            });
-            
-            // 排序
-            const sortedAddresses = [...addressCount.entries()]
-                .sort((a, b) => b[1] - a[1]);
-            
-            // 5. 生成报告
-            let report = '';
-            if (ownerAddress) {
-                report += `👑 合约 Owner 地址: ${ownerAddress}\n`;
-                report += `   该地址参与交互次数: ${addressCount.get(ownerAddress) || 0}\n\n`;
-            } else {
-                report += `⚠️ 未找到 Owner 函数，以下为交互最频繁的地址（疑似主地址）\n\n`;
-            }
-            
-            if (sortedAddresses.length === 0) {
-                report += '❌ 在指定区块范围内未发现任何转账记录。';
-            } else {
-                const topN = Math.min(10, sortedAddresses.length);
-                report += `📊 交互次数 Top ${topN} 地址:\n`;
-                for (let i = 0; i < topN; i++) {
-                    const [addr, count] = sortedAddresses[i];
-                    const isOwner = (ownerAddress && addr.toLowerCase() === ownerAddress.toLowerCase());
-                    const marker = isOwner ? ' [Owner]' : '';
-                    report += `${i+1}. ${addr}  (${count} 次)${marker}\n`;
+                const progressDiv = document.getElementById('progress');
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'none';
+                resultDiv.textContent = '';
+                progressDiv.textContent = '';
+                
+                // 校验地址
+                if (!ethers.utils.isAddress(address)) {
+                    showError('请输入有效的 BSC 合约地址');
+                    return;
                 }
                 
-                report += `\n📁 共发现 ${sortedAddresses.length} 个关联地址，详细列表可在控制台查看。`;
-                console.log('全部关联地址及出现次数:', sortedAddresses);
+                // 解析 ABI
+                let abi;
+                try {
+                    abi = JSON.parse(abiText);
+                } catch (e) {
+                    showError('ABI 格式错误，请输入合法的 JSON');
+                    return;
+                }
+                
+                const btn = document.getElementById('analyzeBtn');
+                btn.disabled = true;
+                btn.textContent = '分析中，请稍候...';
+                
+                try {
+                    const contract = new ethers.Contract(address, abi, provider);
+                    
+                    // 1. 尝试寻找 Owner 函数
+                    progressDiv.textContent = '🔎 正在查找 Owner 函数...';
+                    let ownerAddress = null;
+                    const ownerCandidates = ['owner', 'getOwner', 'admin', 'governance'];
+                    for (const funcName of ownerCandidates) {
+                        try {
+                            if (contract[funcName]) {
+                                const result = await contract[funcName]();
+                                if (result && ethers.utils.isAddress(result)) {
+                                    ownerAddress = result;
+                                    break;
+                                }
+                            }
+                        } catch (e) { /* 忽略未找到的函数 */ }
+                    }
+                    
+                    // 2. 确定区块范围
+                    const currentBlock = await provider.getBlockNumber();
+                    const fromBlock = fromBlockInput ? parseInt(fromBlockInput) : 0;
+                    const toBlock = toBlockInput ? parseInt(toBlockInput) : currentBlock;
+                    
+                    if (fromBlock > toBlock) {
+                        showError('起始区块不能大于结束区块');
+                        btn.disabled = false;
+                        btn.textContent = '开始分析';
+                        return;
+                    }
+                    
+                    progressDiv.textContent = `📦 正在扫描区块 ${fromBlock} 至 ${toBlock}，共计 ${toBlock - fromBlock} 个区块...`;
+                    
+                    // 3. 获取 Transfer 事件 (ERC20/ERC721 通用)
+                    const transferTopic = ethers.utils.id("Transfer(address,address,uint256)");
+                    const filter = {
+                        address: address,
+                        topics: [transferTopic],
+                        fromBlock: fromBlock,
+                        toBlock: toBlock
+                    };
+                    
+                    const logs = await provider.getLogs(filter);
+                    progressDiv.textContent = `✅ 共获取 ${logs.length} 条 Transfer 记录，正在统计地址...`;
+                    
+                    // 4. 统计地址出现次数
+                    const addressCount = new Map();
+                    logs.forEach(log => {
+                        // Transfer 事件的索引: 0=签名, 1=from, 2=to
+                        const fromAddr = ethers.utils.getAddress('0x' + log.topics[1].slice(26));
+                        const toAddr = ethers.utils.getAddress('0x' + log.topics[2].slice(26));
+                        
+                        addressCount.set(fromAddr, (addressCount.get(fromAddr) || 0) + 1);
+                        addressCount.set(toAddr, (addressCount.get(toAddr) || 0) + 1);
+                    });
+                    
+                    // 转换为数组并排序
+                    const sortedAddresses = [...addressCount.entries()]
+                        .sort((a, b) => b[1] - a[1]);
+                    
+                    // 5. 生成结果报告
+                    let report = '';
+                    
+                    if (ownerAddress) {
+                        report += `👑 合约 Owner 地址: ${ownerAddress}\n`;
+                        report += `   该地址参与交互次数: ${addressCount.get(ownerAddress) || 0}\n\n`;
+                    } else {
+                        report += `⚠️ 未找到 Owner 函数，以下为交互最频繁的地址（疑似主地址）\n\n`;
+                    }
+                    
+                    if (sortedAddresses.length === 0) {
+                        report += '❌ 在指定区块范围内未发现任何转账记录。';
+                    } else {
+                        const topN = Math.min(10, sortedAddresses.length);
+                        report += `📊 交互次数 Top ${topN} 地址:\n`;
+                        for (let i = 0; i < topN; i++) {
+                            const [addr, count] = sortedAddresses[i];
+                            const isOwner = (ownerAddress && addr.toLowerCase() === ownerAddress.toLowerCase());
+                            const marker = isOwner ? ' [Owner]' : '';
+                            report += `${i+1}. ${addr}  (${count} 次)${marker}\n`;
+                        }
+                        
+                        report += `\n📁 共发现 ${sortedAddresses.length} 个关联地址，详细列表可在控制台查看。`;
+                        console.log('全部关联地址及出现次数:', sortedAddresses);
+                    }
+                    
+                    resultDiv.textContent = report;
+                    resultDiv.style.display = 'block';
+                    progressDiv.textContent = '✅ 分析完成';
+                    
+                } catch (err) {
+                    showError(`分析出错: ${err.message}`);
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '开始分析';
+                }
+            });
+            
+            function showError(msg) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.textContent = msg;
+                resultDiv.style.display = 'block';
+                resultDiv.style.color = '#d32f2f';
+                resultDiv.style.background = '#ffebee';
+                setTimeout(() => {
+                    resultDiv.style.color = '';
+                    resultDiv.style.background = '';
+                }, 3000);
             }
-            
-            resultDiv.textContent = report;
-            resultDiv.style.display = 'block';
-            progressDiv.textContent = '✅ 分析完成';
-            
-        } catch (err) {
-            showError(`分析出错: ${err.message}`);
-            console.error(err);
-        } finally {
-            resetButton();
-        }
-    });
-    
-    function showError(msg) {
-        resultDiv.textContent = '⚠️ ' + msg;
-        resultDiv.style.display = 'block';
-        resultDiv.style.color = '#d32f2f';
-        resultDiv.style.background = 'rgba(211, 47, 47, 0.08)';
-        setTimeout(() => {
-            resultDiv.style.color = '';
-            resultDiv.style.background = '';
-        }, 3000);
-    }
-    
-    function resetButton() {
-        analyzeBtn.disabled = false;
-        analyzeBtn.innerHTML = '🔎 开始分析';
-    }
-})();
-</script>
+        })();
+    </script>
 </body>
 </html>
