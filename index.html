@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>币安长征 — 链上侦探（最终反馈增强版）</title>
+    <title>币安长征 — 链上侦探（自动跳转版）</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -72,7 +72,7 @@
             color:#fff;font-size:14px;font-weight:700;cursor:pointer;
             display:flex;align-items:center;justify-content:center;gap:6px;
             transition:transform .2s,box-shadow .2s;
-            min-height:44px; /* 适配移动端点击 */
+            min-height:44px;
         }
         .scanner-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(196,30,30,0.5)}
         .scanner-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -126,9 +126,9 @@
 
 <section class="section" id="scanner" style="padding-top:140px">
     <div class="wrap">
-        <div class="eyebrow">🔍 链上侦探 · 反馈增强版</div>
-        <h2 class="sec-h">代币关联地址追踪（每步都有反馈）</h2>
-        <p class="sec-s">点击任何按钮都会立即显示状态。若长时间无反应，请打开浏览器控制台 (F12) 查看网络请求。</p>
+        <div class="eyebrow">🔍 链上侦探 · 自动跳转版</div>
+        <h2 class="sec-h">代币关联地址追踪（未找到自动下一阶段）</h2>
+        <p class="sec-s">勾选“自动跳转”后，查询当前阶段若未找到记录或数据超限，将自动跳到下一阶段继续查询，直到找到为止。配合手动翻页和自动搜寻，灵活追踪。</p>
 
         <div class="scanner-grid">
             <!-- 面板1 -->
@@ -158,6 +158,12 @@
                     <button class="btn-small" id="btnNext" disabled>下一阶段 ▶</button>
                     <button class="btn-small" id="btnAuto" disabled>🔁 自动搜寻</button>
                 </div>
+
+                <!-- 新增：自动跳转复选框 -->
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12px;color:var(--m);cursor:pointer;">
+                    <input type="checkbox" id="autoNextCheck" style="width:auto;cursor:pointer;"> 未找到时自动跳到下一阶段
+                </label>
+
                 <button class="scanner-btn" id="btnQuery" disabled>🔎 查询当前阶段</button>
                 <div class="status-msg" id="status1"></div>
 
@@ -193,14 +199,14 @@
     </div>
 </section>
 
-<footer><div class="ft-copy">BSC 链上销毁通缩协议 · bacz.ltd · 链上侦探工具 (反馈增强版)</div></footer>
+<footer><div class="ft-copy">BSC 链上销毁通缩协议 · bacz.ltd · 链上侦探工具 (自动跳转版)</div></footer>
 
 <script>
 (function() {
     // ==================== 全局配置 ====================
     const RPC_URL = 'https://bsc-dataseed.binance.org/';
     const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-    const MAX_BLOCK_RANGE = 500;  // 每次查询区块数
+    const MAX_BLOCK_RANGE = 500;
 
     let deployBlock = null;
     let latestBlock = null;
@@ -209,7 +215,6 @@
     let autoSearchActive = false;
     let autoSearchTimer = null;
 
-    // ==================== UI 工具函数 ====================
     function setStatus(id, type, msg) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -232,9 +237,7 @@
         return '0x' + topic.slice(26).toLowerCase();
     }
 
-    // ==================== RPC 请求封装 ====================
     async function rpc(method, params) {
-        console.log(`[RPC] 请求 ${method}`, params);
         const res = await fetch(RPC_URL, {
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -243,7 +246,6 @@
         if(!res.ok) throw new Error('HTTP '+res.status);
         const json = await res.json();
         if(json.error) throw new Error(json.error.message || 'RPC error');
-        console.log(`[RPC] 响应 ${method}`, json.result);
         return json.result;
     }
 
@@ -252,7 +254,6 @@
         return parseInt(hex, 16);
     }
 
-    // 二分查找部署区块
     async function findDeployBlock(contract, low, high) {
         let lo = low, hi = high, deploy = high;
         const codeHigh = await rpc('eth_getCode', [contract, '0x'+hi.toString(16)]);
@@ -269,35 +270,26 @@
                     lo = mid + 1;
                 }
             } catch(e) {
-                hi = mid - 1; // 避免单次失败卡死
+                hi = mid - 1;
             }
         }
         return deploy;
     }
 
-    // ==================== 加载代币信息 ====================
+    // 加载代币信息
     document.getElementById('btnLoadInfo').addEventListener('click', async function() {
         const token = document.getElementById('tokenAddr').value.trim();
-        if(!isValidAddress(token)) {
-            setStatus('status1','error','❌ 请输入有效的合约地址');
-            return;
-        }
-
+        if(!isValidAddress(token)) { setStatus('status1','error','❌ 请输入有效的合约地址'); return; }
         const btn = this;
-        btn.disabled = true;
-        btn.textContent = '⏳ 加载中...';
-        hideStatus('status1');
-        hideResult('result1');
+        btn.disabled = true; btn.textContent = '⏳ 加载中...';
+        hideStatus('status1'); hideResult('result1');
         document.getElementById('refinePanel').style.display = 'none';
-
         try {
             latestBlock = await getBlockNumber();
-            setStatus('status1','info','🔍 正在定位部署区块...');
             deployBlock = await findDeployBlock(token, 0, latestBlock);
             const totalBlocks = latestBlock - deployBlock;
             totalStages = Math.ceil(totalBlocks / MAX_BLOCK_RANGE);
             currentStage = 0;
-
             document.getElementById('blockInfo').innerHTML = `
                 部署区块: <b style="color:var(--gold)">${deployBlock.toLocaleString()}</b><br>
                 最新区块: <b style="color:var(--gold)">${latestBlock.toLocaleString()}</b><br>
@@ -307,14 +299,12 @@
             `;
             updateStageDisplay();
             enableButtons(true);
-            setStatus('status1','success','✅ 代币信息加载完成，现在可以查询');
+            setStatus('status1','success','✅ 代币信息加载完成');
         } catch(err) {
-            console.error(err);
             document.getElementById('blockInfo').innerHTML = `❌ 加载失败: ${err.message}`;
-            setStatus('status1','error','❌ 加载失败: ' + err.message);
+            setStatus('status1','error','❌ 加载失败');
         } finally {
-            btn.disabled = false;
-            btn.textContent = '📊 加载代币信息';
+            btn.disabled = false; btn.textContent = '📊 加载代币信息';
         }
     });
 
@@ -345,34 +335,16 @@
         document.getElementById('btnAuto').disabled = !enable;
     }
 
-    // 翻页按钮
-    document.getElementById('btnPrev').addEventListener('click', function() {
-        if(currentStage > 0) {
-            currentStage--;
-            updateStageDisplay();
-            hideResult('result1');
-            hideStatus('status1');
-            document.getElementById('refinePanel').style.display = 'none';
-        }
+    document.getElementById('btnPrev').addEventListener('click', () => {
+        if(currentStage > 0) { currentStage--; updateStageDisplay(); hideResult('result1'); hideStatus('status1'); }
     });
-    document.getElementById('btnNext').addEventListener('click', function() {
-        if(currentStage < totalStages - 1) {
-            currentStage++;
-            updateStageDisplay();
-            hideResult('result1');
-            hideStatus('status1');
-            document.getElementById('refinePanel').style.display = 'none';
-        }
+    document.getElementById('btnNext').addEventListener('click', () => {
+        if(currentStage < totalStages - 1) { currentStage++; updateStageDisplay(); hideResult('result1'); hideStatus('status1'); }
     });
 
-    // 核心查询函数（给定范围）
     async function queryLogsForRange(token, target, from, to) {
         const targetTopic = addrToTopic(target);
-        const common = {
-            address: token,
-            fromBlock: '0x'+from.toString(16),
-            toBlock: '0x'+to.toString(16)
-        };
+        const common = { address: token, fromBlock: '0x'+from.toString(16), toBlock: '0x'+to.toString(16) };
         const [logsFrom, logsTo] = await Promise.all([
             rpc('eth_getLogs',[{...common, topics: [TRANSFER_TOPIC, targetTopic, null]}]),
             rpc('eth_getLogs',[{...common, topics: [TRANSFER_TOPIC, null, targetTopic]}])
@@ -380,95 +352,81 @@
         return [...(logsFrom||[]), ...(logsTo||[])];
     }
 
-    // 查询当前阶段（会被手动和自动调用）
-    async function queryCurrentStage(isAuto) {
+    // 核心：查询当前阶段，支持自动跳转
+    async function queryCurrentStage(isAutoOrJump) {
         const token = document.getElementById('tokenAddr').value.trim();
         const target = document.getElementById('targetAddr').value.trim();
-        hideResult('result1');
-        hideStatus('status1');
+        hideResult('result1'); hideStatus('status1');
         document.getElementById('refinePanel').style.display = 'none';
 
         if(!isValidAddress(token)) { setStatus('status1','error','❌ 无效合约地址'); return false; }
         if(!isValidAddress(target)) { setStatus('status1','error','❌ 无效钱包地址'); return false; }
 
         const btn = document.getElementById('btnQuery');
-        btn.disabled = true;
-        btn.innerHTML = '⏳ 查询中...';
-        if(!isAuto) enableButtons(false);
+        btn.disabled = true; btn.innerHTML = '⏳ 查询中...';
+        // 在自动跳转或自动搜寻时，不接管按钮状态，由上层控制
+        if(!isAutoOrJump) enableButtons(false);
 
         try {
             const {from, to} = getStageBlockRange(currentStage);
-            setStatus('status1','info', `📡 查询 ${currentStage+1}/${totalStages} (区块 ${from.toLocaleString()}~${to.toLocaleString()})`);
+            setStatus('status1','info', `📡 阶段 ${currentStage+1}/${totalStages} (区块 ${from.toLocaleString()}~${to.toLocaleString()})`);
 
             let allLogs;
             try {
                 allLogs = await queryLogsForRange(token, target, from, to);
             } catch(e) {
                 const errMsg = e.message.toLowerCase();
-if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.includes('exceeded')) {
-    setStatus('status1','info', `⚠️ 阶段 ${currentStage+1} 数据过多，正在自动拆分成子阶段查询...`);
-    // 自动拆分成 5 个小段
-    const subStages = 5;
-    const range = to - from;
-    const step = Math.ceil(range / subStages);
-    let foundAny = false;
-    let totalLogs = [];
-    for (let i = 0; i < subStages; i++) {
-        const subFrom = from + i * step;
-        let subTo = subFrom + step - 1;
-        if (subTo > to) subTo = to;
-        try {
-            const logs = await queryLogsForRange(token, target, subFrom, subTo);
-            totalLogs = totalLogs.concat(logs);
-            if (logs.length > 0) foundAny = true;
-        } catch (e2) {
-            // 子范围仍然超限，递归拆分（为了防止无限递归，最多再拆一次）
-            if(e2.message.includes('limit exceeded') || e2.message.includes('too many')) {
-                const subSubStages = 3;
-                const subRange = subTo - subFrom;
-                const subStep = Math.ceil(subRange / subSubStages);
-                for (let j = 0; j < subSubStages; j++) {
-                    const ssFrom = subFrom + j * subStep;
-                    let ssTo = ssFrom + subStep - 1;
-                    if (ssTo > subTo) ssTo = subTo;
-                    try {
-                        const sLogs = await queryLogsForRange(token, target, ssFrom, ssTo);
-                        totalLogs = totalLogs.concat(sLogs);
-                        if (sLogs.length > 0) foundAny = true;
-                    } catch (e3) {
-                        // 再超限就算了，记录一下
-                        console.warn(`子子范围 ${ssFrom}-${ssTo} 仍超限，已跳过`);
+                if(errMsg.includes('limit exceeded') || errMsg.includes('too many')) {
+                    // 超量跳过处理
+                    setStatus('status1','error', `⚠️ 阶段 ${currentStage+1} 数据过多，已跳过`);
+                    showResult('result1', `阶段 ${currentStage+1} (${from.toLocaleString()}~${to.toLocaleString()}) 转账记录过多。\n可手动细化或自动跳转下一阶段。`);
+                    document.getElementById('refinePanel').style.display = 'block';
+                    document.getElementById('refineFrom').value = from;
+                    document.getElementById('refineTo').value = to;
+
+                    // 如果是自动跳转或自动搜寻，继续下一阶段
+                    if (isAutoOrJump || document.getElementById('autoNextCheck').checked) {
+                        if (currentStage < totalStages - 1) {
+                            currentStage++;
+                            updateStageDisplay();
+                            setStatus('status1','info', `⏭ 跳过并自动进入阶段 ${currentStage+1}...`);
+                            btn.disabled = false; btn.innerHTML = '🔎 查询当前阶段';
+                            setTimeout(() => queryCurrentStage(isAutoOrJump), 800);
+                            return 'skipped';
+                        } else {
+                            setStatus('status1','info', '📭 已是最后一个阶段，未找到记录');
+                            return false;
+                        }
                     }
-                }
-            } else {
-                throw e2; // 其他错误直接抛出
-            }
-        }
-    }
-    if (totalLogs.length === 0 && !foundAny) {
-        setStatus('status1','info', `📭 阶段 ${currentStage+1} 自动拆分后仍未找到记录`);
-        showResult('result1', `阶段 ${currentStage+1} 已自动拆分查询，未找到该地址的交互记录。`);
-        return false;
-    }
-    // 有结果，复用后续的提取逻辑
-    allLogs = totalLogs;
-    // 下面接着原本的 if(allLogs.length === 0) ... 分支之前，我们直接将 totalLogs 赋给 allLogs，然后跳过原本的错误处理，直接进入提取流程
-    // 为了不破坏原有结构，我们在这里插入一个标记，然后跳到提取部分
-    // 一种简单的方法：将以下提取逻辑包装成一个函数，或者把整个 try 块逻辑重构。这里为保持简单，我们直接将 totalLogs 当作 allLogs，然后执行提取。
-    // 由于原本代码在 catch 之后不会执行到提取部分，我们需要把提取代码移到一个公共函数中。
-}else {
-                    setStatus('status1','error','❌ 查询失败: ' + e.message);
+                    return 'skipped';
+                } else {
+                    setStatus('status1','error','❌ 查询失败: '+e.message);
                     return false;
                 }
             }
 
             if(allLogs.length === 0) {
                 setStatus('status1','info', `📭 阶段 ${currentStage+1} 无记录`);
-                showResult('result1', `阶段 ${currentStage+1} (${from.toLocaleString()}~${to.toLocaleString()}) 未找到该地址的交互记录。`);
+                showResult('result1', `阶段 ${currentStage+1} (${from.toLocaleString()}~${to.toLocaleString()}) 未找到交互记录。`);
+
+                // 自动跳转逻辑
+                if (isAutoOrJump || document.getElementById('autoNextCheck').checked) {
+                    if (currentStage < totalStages - 1) {
+                        currentStage++;
+                        updateStageDisplay();
+                        setStatus('status1','info', `➡️ 自动进入阶段 ${currentStage+1}...`);
+                        btn.disabled = false; btn.innerHTML = '🔎 查询当前阶段';
+                        setTimeout(() => queryCurrentStage(isAutoOrJump), 800);
+                        return false;
+                    } else {
+                        setStatus('status1','info', '📭 已检查所有阶段，未找到记录');
+                        return false;
+                    }
+                }
                 return false;
             }
 
-            // 提取对手地址
+            // 找到了
             const counterparties = new Map();
             allLogs.forEach(log => {
                 const f = extractAddressFromTopic(log.topics[1]);
@@ -487,7 +445,7 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
             report += `\n💡 复制任意地址到「步骤2」追踪转账详情。`;
 
             showResult('result1', report);
-            setStatus('status1','success', `✅ 找到 ${sorted.length} 个对手`);
+            setStatus('status1','success', `✅ 在阶段 ${currentStage+1} 找到 ${sorted.length} 个对手`);
             return true;
         } catch(err) {
             console.error(err);
@@ -496,33 +454,25 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
         } finally {
             btn.disabled = false;
             btn.innerHTML = '🔎 查询当前阶段';
-            if(!isAuto) enableButtons(true);
+            if(!isAutoOrJump) enableButtons(true);
         }
     }
 
-    // 绑定查询按钮
-    document.getElementById('btnQuery').addEventListener('click', function() { queryCurrentStage(false); });
+    // 查询按钮点击
+    document.getElementById('btnQuery').addEventListener('click', function() {
+        queryCurrentStage(false);
+    });
 
-    // 细化查询按钮
+    // 细化查询
     document.getElementById('btnRefineQuery').addEventListener('click', async function() {
         const token = document.getElementById('tokenAddr').value.trim();
         const target = document.getElementById('targetAddr').value.trim();
         const fromInput = document.getElementById('refineFrom').value;
         const toInput = document.getElementById('refineTo').value;
-        hideResult('result1');
-        hideStatus('status1');
-
-        if(!isValidAddress(token) || !isValidAddress(target)) {
-            setStatus('status1','error','❌ 请填写有效地址');
-            return;
-        }
-
-        let from = parseInt(fromInput);
-        let to = parseInt(toInput);
-        if(isNaN(from) || isNaN(to) || from >= to) {
-            setStatus('status1','error','❌ 子范围无效（起始 < 结束）');
-            return;
-        }
+        hideResult('result1'); hideStatus('status1');
+        if(!isValidAddress(token) || !isValidAddress(target)) { setStatus('status1','error','❌ 请填写有效地址'); return; }
+        let from = parseInt(fromInput), to = parseInt(toInput);
+        if(isNaN(from) || isNaN(to) || from >= to) { setStatus('status1','error','❌ 子范围无效'); return; }
 
         const btn = this;
         btn.disabled = true; btn.innerHTML = '⏳ 查询子范围...';
@@ -555,7 +505,7 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
         }
     });
 
-    // 自动搜寻
+    // 自动搜寻（原功能保持不变）
     document.getElementById('btnAuto').addEventListener('click', async function() {
         if(autoSearchActive) { stopAutoSearch(); return; }
         const token = document.getElementById('tokenAddr').value.trim();
@@ -564,7 +514,6 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
             setStatus('status1','error','❌ 请填写合约和钱包地址');
             return;
         }
-
         autoSearchActive = true;
         this.textContent = '⏹ 停止搜寻';
         this.classList.add('active');
@@ -580,20 +529,23 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
             stopAutoSearch();
             return;
         }
+        // 使用自动跳转逻辑 (true 代表自动/搜寻模式)
         const result = await queryCurrentStage(true);
         if(result === true) {
             setStatus('status1','success', `🎯 在第 ${currentStage+1} 阶段找到记录`);
             stopAutoSearch();
             return;
         }
+        // 无论 false 还是 'skipped'，都进入下一阶段，除非已经是最后一个阶段
+        if(currentStage >= totalStages - 1) {
+            setStatus('status1','info','📭 已是最后一个阶段，未找到记录');
+            stopAutoSearch();
+            return;
+        }
         currentStage++;
         updateStageDisplay();
-        if(result === 'skipped') {
-            setStatus('status1','info', `⏭ 阶段 ${currentStage} 数据过多已跳过，自动继续...`);
-        } else {
-            setStatus('status1','info', `🔁 阶段 ${currentStage} 无记录，自动进入下一阶段...`);
-        }
-        autoSearchTimer = setTimeout(() => autoSearchLoop(), 1500);
+        setStatus('status1','info', `🔁 自动进入阶段 ${currentStage+1}...`);
+        autoSearchTimer = setTimeout(() => autoSearchLoop(), 1000);
     }
 
     function stopAutoSearch() {
@@ -605,21 +557,17 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
         enableButtons(true);
     }
 
-    // ==================== 面板2：两地址间转账 ====================
+    // 面板2
     document.getElementById('btn2').addEventListener('click', async function() {
         const addrA = document.getElementById('addrA').value.trim();
         const addrB = document.getElementById('addrB').value.trim();
         const token = document.getElementById('token2').value.trim();
         const fromInput = document.getElementById('from2').value;
         const toInput = document.getElementById('to2').value;
-        hideResult('result2');
-        hideStatus('status2');
-
+        hideResult('result2'); hideStatus('status2');
         if(!isValidAddress(addrA) || !isValidAddress(addrB) || !isValidAddress(token)) {
-            setStatus('status2','error','❌ 请填写有效的地址和合约');
-            return;
+            setStatus('status2','error','❌ 请填写有效的地址和合约'); return;
         }
-
         const btn = this;
         btn.disabled = true; btn.innerHTML = '⏳ 查询中...';
         try {
@@ -629,16 +577,13 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
             if(isNaN(from)||from<0) from = 0;
             if(isNaN(to)||to>current) to = current;
             if(from > to) { setStatus('status2','error','起始 > 结束'); return; }
-
             setStatus('status2','info', `📡 查询两地址间转账...`);
             const topicA = addrToTopic(addrA), topicB = addrToTopic(addrB);
             const blockRange = { fromBlock:'0x'+from.toString(16), toBlock:'0x'+to.toString(16) };
-
             const [logsAB, logsBA] = await Promise.all([
                 rpc('eth_getLogs',[{address:token, topics:[TRANSFER_TOPIC, topicA, topicB], ...blockRange}]),
                 rpc('eth_getLogs',[{address:token, topics:[TRANSFER_TOPIC, topicB, topicA], ...blockRange}])
             ]);
-
             const allLogs = [...(logsAB||[]), ...(logsBA||[])];
             if(allLogs.length === 0) {
                 setStatus('status2','success','✅ 无直接转账');
@@ -664,7 +609,7 @@ if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.in
         }
     });
 
-    console.log('链上侦探工具已启动，请先加载代币信息。');
+    console.log('链上侦探（自动跳转版）已就绪');
 })();
 </script>
 </body>
