@@ -3,107 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC 关联地址追踪（轻量分步版）</title>
+    <title>币安长征 — 销毁即通缩 · 燃烧铸价值</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
     <style>
-        :root {
-            --bg: #0b0b0b;
-            --card: #151515;
-            --border: #2a2a2a;
-            --text: #e0e0e0;
-            --muted: #999;
-            --gold: #daa520;
-            --red: #c41e1e;
-            --green: #2e7d32;
+        /* ═══════════════════ 长征主题核心样式 ═══════════════════ */
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --red:#c41e1e; --red-b:#e03030; --red-l:#ff5252;
+            --gold:#daa520; --gold-l:#f0c040; --gold-d:#b8860b;
+            --earth:#5c4033; --earth-l:#7a5c47;
+            --dawn:#1a0a0a; --night:#0d0505;
+            --bg:#0d0505; --bg2:#140808; --s:#1c0c0c; --s2:#241010;
+            --b:rgba(255,255,255,0.06); --b2:rgba(255,255,255,0.1);
+            --t:#f5ece0; --m:#9a8a7a;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', 'Noto Sans SC', sans-serif; display: flex; justify-content: center; padding: 40px 16px; line-height: 1.6; }
-        .container { max-width: 800px; width: 100%; display: flex; flex-direction: column; gap: 32px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
-        h2 { font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-        .sub { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
-        input, textarea { width: 100%; padding: 10px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: monospace; font-size: 13px; margin-bottom: 14px; outline: none; }
-        input:focus, textarea:focus { border-color: var(--gold); }
-        textarea { resize: vertical; }
-        .row { display: flex; gap: 12px; }
-        .row > div { flex: 1; }
-        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #b71c1c, #d32f2f); border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: .2s; }
-        button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(196,30,30,0.4); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .status { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-        .status.info { background: rgba(218,165,32,0.1); border: 1px solid rgba(218,165,32,0.3); color: var(--gold); }
-        .status.error { background: rgba(211,47,47,0.1); border: 1px solid rgba(211,47,47,0.25); color: #ef5350; }
-        .status.success { background: rgba(46,125,50,0.1); border: 1px solid rgba(46,125,50,0.3); color: #66bb6a; }
-        .result { background: #0f0f0f; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 14px; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 13px; line-height: 1.7; max-height: 400px; overflow-y: auto; color: #ccc; }
-        .gold { color: var(--gold); font-weight: 700; }
-        .red { color: #ef5350; font-weight: 700; }
+        html{scroll-behavior:smooth}
+        body{font-family:'Noto Sans SC','Outfit',sans-serif;background:var(--bg);color:var(--t);overflow-x:hidden;line-height:1.7}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:var(--bg)}
+        ::-webkit-scrollbar-thumb{background:var(--red);border-radius:99px}
+        ::selection{background:var(--red);color:#fff}
+        
+        /* ── 导航 ── */
+        nav{
+            position:fixed;top:0;left:0;right:0;z-index:100;
+            padding:12px 0;background:rgba(13,5,5,0.92);
+            backdrop-filter:blur(12px);border-bottom:1px solid var(--b);
+        }
+        .nav-inner{max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+        .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900}
+        .logo-mark{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--red),#7a0a0a);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(196,30,30,0.5)}
+        .logo-zh{font-size:18px;font-weight:900;color:var(--gold)}
+        .logo-en{font-size:9px;font-weight:500;color:var(--m);letter-spacing:.12em;text-transform:uppercase}
+        .nav-links{display:flex;gap:26px}
+        .nav-links a{font-size:13px;font-weight:500;color:var(--m);text-decoration:none;transition:color .2s}
+        .nav-links a:hover{color:var(--gold)}
+        
+        /* ── 公共区块样式 ── */
+        .section{padding:100px 0;position:relative;z-index:10}
+        .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+        .eyebrow{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em}
+        .eyebrow::before{content:'';width:20px;height:2px;background:var(--red);border-radius:99px}
+        .sec-h{font-size:clamp(28px,3.5vw,44px);font-weight:900;letter-spacing:-.02em;line-height:1.15;margin-bottom:14px}
+        .sec-s{font-size:16px;color:var(--m);max-width:600px;line-height:1.75}
+        
+        /* ═══════════════════ 链上侦探工具样式 ═══════════════════ */
+        .scanner-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:48px}
+        .scanner-card{
+            background:var(--s);border:1px solid var(--b);border-radius:18px;
+            padding:28px;position:relative;overflow:hidden;
+        }
+        .scanner-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),var(--gold),transparent);animation:scanLine 3s ease-in-out infinite}
+        @keyframes scanLine{0%,100%{opacity:.4}50%{opacity:1}}
+        .scanner-card h3{font-size:18px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .scanner-card .hint{font-size:12px;color:var(--m);margin-bottom:18px;line-height:1.6}
+        .field-group{margin-bottom:16px}
+        .field-group label{display:block;font-size:12px;font-weight:600;color:var(--t);margin-bottom:6px}
+        .field-input,.field-textarea{
+            width:100%;padding:11px 14px;border-radius:8px;
+            background:var(--bg2);border:1px solid var(--b2);
+            color:var(--t);font-family:monospace;font-size:13px;
+            outline:none;transition:border-color .2s;
+        }
+        .field-input:focus,.field-textarea:focus{border-color:var(--gold)}
+        .field-textarea{height:80px;resize:vertical}
+        .row{display:flex;gap:10px}
+        .row .field-group{flex:1}
+        .scanner-btn{
+            width:100%;padding:12px;border:none;border-radius:10px;
+            background:linear-gradient(135deg,var(--red),#7a0a0a);
+            color:#fff;font-size:14px;font-weight:700;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;gap:6px;
+            transition:transform .2s,box-shadow .2s;
+        }
+        .scanner-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(196,30,30,0.5)}
+        .scanner-btn:disabled{opacity:.5;cursor:not-allowed}
+        .status-msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;display:none;align-items:center;gap:6px}
+        .status-msg.info{background:rgba(218,165,32,0.1);border:1px solid rgba(218,165,32,0.3);color:var(--gold);display:flex}
+        .status-msg.error{background:rgba(196,30,30,0.1);border:1px solid rgba(196,30,30,0.3);color:#ef5350;display:flex}
+        .status-msg.success{background:rgba(46,125,50,0.1);border:1px solid rgba(46,125,50,0.3);color:#66bb6a;display:flex}
+        .result-area{
+            margin-top:12px;padding:16px;border-radius:10px;
+            background:var(--bg2);border:1px solid var(--b);
+            font-family:monospace;font-size:12px;line-height:1.8;
+            max-height:300px;overflow-y:auto;white-space:pre-wrap;
+            word-break:break-all;color:#ccc;display:none;
+        }
+        
+        /* ── Footer ── */
+        footer{padding:36px 0;border-top:1px solid var(--b);position:relative;z-index:10;text-align:center}
+        .ft-copy{font-size:12px;color:var(--m)}
+        
+        /* ── Mobile ── */
+        @media(max-width:860px){.scanner-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
-<div class="container">
 
-    <!-- 面板1：查地址与代币的交互 -->
-    <div class="card">
-        <h2>🔍 步骤1：地址 × 代币交互</h2>
-        <p class="sub">输入代币合约地址 + 一个你关注的钱包地址，查询该地址代币转入/转出的所有对手地址</p>
-        <label>📌 代币合约地址</label>
-        <input type="text" id="tokenAddr" placeholder="0x...">
-        <label>👤 钱包地址 (必填，避免超限)</label>
-        <input type="text" id="targetAddr" placeholder="0x...">
-        <div class="row">
-            <div><label>🔹 起始区块 (可选)</label><input type="number" id="from1" placeholder="0"></div>
-            <div><label>🔹 结束区块 (可选)</label><input type="number" id="to1" placeholder="latest"></div>
+<!-- ═══════════════════ 导航 ═══════════════════ -->
+<nav>
+    <div class="nav-inner">
+        <div class="logo">
+            <div class="logo-mark">🔥</div>
+            <div><div class="logo-zh">币安长征</div><div class="logo-en">Binance Long March</div></div>
         </div>
-        <button id="btn1">🔎 查询该地址的代币交互</button>
-        <div id="status1"></div>
-        <div id="result1" class="result" style="display:none;"></div>
-    </div>
-
-    <!-- 面板2：查两个地址之间的交易来往 -->
-    <div class="card">
-        <h2>🔗 步骤2：地址 vs 地址来往</h2>
-        <p class="sub">将上一步查到的对手地址复制到此处，再填写另一个地址，查看它们之间的直接代币转账</p>
-        <label>👤 地址 A</label>
-        <input type="text" id="addrA" placeholder="0x...">
-        <label>👤 地址 B</label>
-        <input type="text" id="addrB" placeholder="0x...">
-        <label>📌 代币合约地址 (可选，不填则查询 BNB 转账)</label>
-        <input type="text" id="token2" placeholder="留空则查 BNB 原生转账">
-        <div class="row">
-            <div><label>🔹 起始区块 (可选)</label><input type="number" id="from2" placeholder="0"></div>
-            <div><label>🔹 结束区块 (可选)</label><input type="number" id="to2" placeholder="latest"></div>
+        <div class="nav-links">
+            <a href="#scanner">链上侦探</a>
+            <a href="https://bacz.ltd" target="_blank">进入 DApp →</a>
         </div>
-        <button id="btn2">🔎 查询两地址交易</button>
-        <div id="status2"></div>
-        <div id="result2" class="result" style="display:none;"></div>
     </div>
+</nav>
 
-</div>
+<!-- ═══════════════════ 链上侦探 ═══════════════════ -->
+<section class="section" id="scanner" style="padding-top:140px">
+    <div class="wrap">
+        <div class="eyebrow">🔍 链上侦探</div>
+        <h2 class="sec-h">代币关联地址追踪</h2>
+        <p class="sec-s">分步查询，精准追踪。先看某个地址与代币的所有交互对手，再深挖两个地址之间每一笔转账的来龙去脉。严格遵循 BSC 公共 RPC 的 eth_getLogs 限制，不会超量。</p>
+        
+        <div class="scanner-grid">
+            <!-- 面板1：查地址与代币的交互 -->
+            <div class="scanner-card">
+                <h3>📍 步骤1: 地址 × 代币交互</h3>
+                <p class="hint">输入代币合约地址 + 你关注的钱包地址，查询该地址所有转入/转出的对手地址。每次只查一个指定地址，数据量小，不会超限。</p>
+                
+                <div class="field-group">
+                    <label>📌 代币合约地址</label>
+                    <input type="text" id="tokenAddr" class="field-input" placeholder="0x..." value="0x5F7dc0E34920Aa46ae8c7519a35D9d54A5f57777">
+                </div>
+                <div class="field-group">
+                    <label>👤 钱包地址（必填）</label>
+                    <input type="text" id="targetAddr" class="field-input" placeholder="0x...">
+                </div>
+                <div class="row">
+                    <div class="field-group"><label>起始区块</label><input type="number" id="from1" class="field-input" placeholder="0"></div>
+                    <div class="field-group"><label>结束区块</label><input type="number" id="to1" class="field-input" placeholder="latest"></div>
+                </div>
+                <button class="scanner-btn" id="btn1">🔎 查询该地址与代币的交互</button>
+                <div class="status-msg" id="status1"></div>
+                <div class="result-area" id="result1"></div>
+            </div>
+            
+            <!-- 面板2：查两个地址之间的交易 -->
+            <div class="scanner-card">
+                <h3>🔗 步骤2: 地址 vs 地址转账</h3>
+                <p class="hint">将上一步查到的对手地址复制到下方，再填入另一个地址，查看它们之间所有的直接代币转账。精确到每一笔的金额与方向。</p>
+                
+                <div class="field-group">
+                    <label>👤 地址 A</label>
+                    <input type="text" id="addrA" class="field-input" placeholder="0x...">
+                </div>
+                <div class="field-group">
+                    <label>👤 地址 B</label>
+                    <input type="text" id="addrB" class="field-input" placeholder="0x...">
+                </div>
+                <div class="field-group">
+                    <label>📌 代币合约地址</label>
+                    <input type="text" id="token2" class="field-input" placeholder="0x..." value="0x5F7dc0E34920Aa46ae8c7519a35D9d54A5f57777">
+                </div>
+                <div class="row">
+                    <div class="field-group"><label>起始区块</label><input type="number" id="from2" class="field-input" placeholder="0"></div>
+                    <div class="field-group"><label>结束区块</label><input type="number" id="to2" class="field-input" placeholder="latest"></div>
+                </div>
+                <button class="scanner-btn" id="btn2">🔎 查询两地址间代币转账</button>
+                <div class="status-msg" id="status2"></div>
+                <div class="result-area" id="result2"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="ft-copy">BSC 链上销毁通缩协议 · bacz.ltd · 链上侦探工具内置</div>
+</footer>
 
 <script>
 (function() {
+    // ═══════════════════ 链上侦探脚本（基于BSC JSON-RPC） ═══════════════════
+    // 公共RPC（免费节点，注意频率与区块范围限制）
     const RPC_URL = 'https://bsc-dataseed1.binance.org/';
+    
+    // ERC20 Transfer 事件的签名哈希
+    // keccak256("Transfer(address,address,uint256)")
     const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-
+    
+    // ── 工具函数 ──
     function setStatus(id, type, msg) {
-        document.getElementById(id).innerHTML = `<div class="status ${type}">${msg}</div>`;
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.className = 'status-msg ' + type;
+        el.style.display = 'flex';
     }
     function showResult(id, text) {
         const el = document.getElementById(id);
         el.textContent = text;
         el.style.display = 'block';
     }
-    function hideResult(id) {
-        document.getElementById(id).style.display = 'none';
-    }
+    function hideStatus(id) { document.getElementById(id).style.display = 'none'; }
+    function hideResult(id) { document.getElementById(id).style.display = 'none'; }
+    
+    // 校验BSC地址格式
     function isValidAddress(addr) {
         return /^0x[0-9a-fA-F]{40}$/.test(addr);
     }
-    // 将地址转为 32 字节 topics 参数
+    
+    // 将地址填充为32字节的topic参数（前24位为0）
     function addrToTopic(addr) {
         return '0x000000000000000000000000' + addr.slice(2).toLowerCase();
     }
-
+    
+    // JSON-RPC 请求封装
     async function rpc(method, params) {
         const res = await fetch(RPC_URL, {
             method: 'POST',
@@ -115,181 +224,202 @@
         if (json.error) throw new Error(json.error.message || 'RPC error');
         return json.result;
     }
-
+    
+    // 获取最新区块号
     async function getBlockNumber() {
         const hex = await rpc('eth_blockNumber');
         return parseInt(hex, 16);
     }
-
-    // 查询指定代币中，某个地址作为 from 或 to 的日志
-    async function getTokenLogsForAddress(contract, target, fromBlock, toBlock) {
-        const topic1 = addrToTopic(target);
-        // 作为 from
-        const paramsFrom = {
-            address: contract,
-            topics: [TRANSFER_TOPIC, topic1, null],
-            fromBlock: '0x' + fromBlock.toString(16),
-            toBlock: '0x' + toBlock.toString(16)
-        };
-        // 作为 to
-        const paramsTo = {
-            address: contract,
-            topics: [TRANSFER_TOPIC, null, topic1],
-            fromBlock: '0x' + fromBlock.toString(16),
-            toBlock: '0x' + toBlock.toString(16)
-        };
-
-        const [logsFrom, logsTo] = await Promise.all([
-            rpc('eth_getLogs', [paramsFrom]).catch(() => []),
-            rpc('eth_getLogs', [paramsTo]).catch(() => [])
-        ]);
-        return { logsFrom: logsFrom || [], logsTo: logsTo || [] };
+    
+    // 解析区块范围参数
+    async function parseBlockRange(fromInput, toInput) {
+        const current = await getBlockNumber();
+        let from = fromInput ? parseInt(fromInput) : 0;
+        let to = toInput ? parseInt(toInput) : current;
+        if (isNaN(from) || from < 0) from = 0;
+        if (isNaN(to) || to > current) to = current;
+        return { from, to, current };
     }
-
-    // 查询两个地址之间的代币转账 (如果提供了 token)
-    async function getTokenLogsBetween(contract, addrA, addrB, fromBlock, toBlock) {
-        const topicA = addrToTopic(addrA);
-        const topicB = addrToTopic(addrB);
-        // A→B
-        const params1 = {
-            address: contract,
-            topics: [TRANSFER_TOPIC, topicA, topicB],
-            fromBlock: '0x' + fromBlock.toString(16),
-            toBlock: '0x' + toBlock.toString(16)
-        };
-        // B→A
-        const params2 = {
-            address: contract,
-            topics: [TRANSFER_TOPIC, topicB, topicA],
-            fromBlock: '0x' + fromBlock.toString(16),
-            toBlock: '0x' + toBlock.toString(16)
-        };
-        const [logs1, logs2] = await Promise.all([
-            rpc('eth_getLogs', [params1]).catch(() => []),
-            rpc('eth_getLogs', [params2]).catch(() => [])
-        ]);
-        return [...(logs1 || []), ...(logs2 || [])];
+    
+    // 从log的topics中提取地址（topic[1]是from，topic[2]是to）
+    function extractAddressFromTopic(topic) {
+        if (!topic || topic.length < 66) return null;
+        // 标准ERC20 Transfer：topic为32字节hex，取后40个字符即为地址
+        return '0x' + topic.slice(26).toLowerCase();
     }
-
-    // 查询两个地址之间的 BNB 转账（原生交易）
-    async function getBnbTransfersBetween(addrA, addrB, fromBlock, toBlock) {
-        // BNB 转账无法直接过滤，但我们可以获取某地址发出的交易并过滤接收方，或调取内部交易（eth_getTransactionReceipt 需遍历）
-        // 此处简化：查地址A发出的普通交易，再逐个检查接收方，但效率低，故仅提供思路并提示用户
-        return []; // 暂时不实现，可后续补充
-    }
-
-    // ── 面板1 ──
+    
+    // ── 面板1：查询某个地址与代币的交互 ──
     document.getElementById('btn1').addEventListener('click', async () => {
         const token = document.getElementById('tokenAddr').value.trim();
         const target = document.getElementById('targetAddr').value.trim();
         const fromInput = document.getElementById('from1').value;
         const toInput = document.getElementById('to1').value;
+        
         hideResult('result1');
-        setStatus('status1', '', '');
-
-        if (!token || !isValidAddress(token)) { setStatus('status1', 'error', '❌ 请输入有效的代币合约地址'); return; }
-        if (!target || !isValidAddress(target)) { setStatus('status1', 'error', '❌ 请输入有效的钱包地址 (必填)'); return; }
-
+        hideStatus('status1');
+        
+        // 校验
+        if (!isValidAddress(token)) { setStatus('status1','error','❌ 请输入有效的代币合约地址'); return; }
+        if (!isValidAddress(target)) { setStatus('status1','error','❌ 请输入有效的钱包地址（必填）'); return; }
+        
         const btn = document.getElementById('btn1');
         btn.disabled = true; btn.innerHTML = '⏳ 查询中...';
-
+        
         try {
-            const current = await getBlockNumber();
-            let from = fromInput ? parseInt(fromInput) : 0;
-            let to = toInput ? parseInt(toInput) : current;
-            if (isNaN(from)) from = 0;
-            if (isNaN(to) || to > current) to = current;
-            if (from > to) { setStatus('status1', 'error', '起始 > 结束'); btn.disabled = false; btn.innerHTML = '🔎 查询交互'; return; }
-
-            setStatus('status1', 'info', `📡 查询地址 ${target.slice(0,10)}... 与代币的转入/转出记录`);
-            const { logsFrom, logsTo } = await getTokenLogsForAddress(token, target, from, to);
-            const allLogs = [...logsFrom, ...logsTo];
-
+            const { from, to, current } = await parseBlockRange(fromInput, toInput);
+            if (from > to) { setStatus('status1','error','❌ 起始区块不能大于结束区块'); btn.disabled = false; btn.innerHTML = '🔎 查询该地址与代币的交互'; return; }
+            
+            setStatus('status1','info', `📡 正在查询地址 ${target.slice(0,10)}... 与代币的转账记录（区块 ${from}~${to}）`);
+            
+            const targetTopic = addrToTopic(target);
+            
+            // 分别查询该地址作为 from 和 to 的日志
+            // 注意：公共节点对单次请求的区块范围可能有隐含限制，如果跨度太大可能被拒绝。
+            // 如果报错，建议缩小范围（例如每次查1万~5万个区块）。
+            let logsFrom = [], logsTo = [];
+            try {
+                [logsFrom, logsTo] = await Promise.all([
+                    rpc('eth_getLogs', [{
+                        address: token,
+                        topics: [TRANSFER_TOPIC, targetTopic, null],
+                        fromBlock: '0x' + from.toString(16),
+                        toBlock: '0x' + to.toString(16)
+                    }]),
+                    rpc('eth_getLogs', [{
+                        address: token,
+                        topics: [TRANSFER_TOPIC, null, targetTopic],
+                        fromBlock: '0x' + from.toString(16),
+                        toBlock: '0x' + to.toString(16)
+                    }])
+                ]);
+            } catch (e) {
+                if (e.message.includes('exceeded') || e.message.includes('too large') || e.message.includes('limit')) {
+                    setStatus('status1','error','❌ 查询范围过大，请缩小范围（建议每次1万~5万个区块）');
+                } else {
+                    setStatus('status1','error','❌ 查询失败: ' + e.message);
+                }
+                btn.disabled = false; btn.innerHTML = '🔎 查询该地址与代币的交互';
+                return;
+            }
+            
+            const allLogs = [...(logsFrom || []), ...(logsTo || [])];
+            
             if (allLogs.length === 0) {
-                setStatus('status1', 'success', '✅ 查询完成，未发现交互记录');
-                showResult('result1', '该地址在指定区块范围内未与代币合约发生过转账。');
+                setStatus('status1','success','✅ 查询完成，在指定范围内未发现交互记录');
+                showResult('result1','该地址在所选区块范围内未与该代币发生过转账。');
             } else {
-                // 提取对手地址
-                const counterparties = new Set();
+                // 提取对手地址（去重）
+                const counterparties = new Map();
                 allLogs.forEach(log => {
-                    const from = '0x' + log.topics[1].slice(26);
-                    const to = '0x' + log.topics[2].slice(26);
-                    if (from.toLowerCase() !== target.toLowerCase()) counterparties.add(from);
-                    if (to.toLowerCase() !== target.toLowerCase()) counterparties.add(to);
+                    const f = extractAddressFromTopic(log.topics[1]);
+                    const t = extractAddressFromTopic(log.topics[2]);
+                    if (f && f !== target.toLowerCase()) {
+                        counterparties.set(f, (counterparties.get(f) || 0) + 1);
+                    }
+                    if (t && t !== target.toLowerCase()) {
+                        counterparties.set(t, (counterparties.get(t) || 0) + 1);
+                    }
                 });
-                let report = `📍 地址 ${target} 与代币交互记录：\n`;
-                report += `📊 共 ${allLogs.length} 条转账，涉及 ${counterparties.size} 个对手地址\n\n`;
-                report += `👥 对手地址列表：\n`;
-                Array.from(counterparties).slice(0, 20).forEach((addr, i) => {
-                    report += `${i+1}. ${addr}\n`;
-                });
-                if (counterparties.size > 20) report += `… 还有 ${counterparties.size - 20} 个地址未显示\n`;
-                report += `\n💡 复制任意地址到「步骤2」追踪它与另一个地址的来往。`;
+                
+                const sorted = [...counterparties.entries()].sort((a,b) => b[1] - a[1]);
+                let report = `📍 地址 ${target}\n`;
+                report += `📊 共 ${allLogs.length} 条转账, 涉及 ${sorted.length} 个对手地址\n\n`;
+                report += `👥 对手地址（按交互次数排序）:\n`;
+                const show = Math.min(sorted.length, 30);
+                for (let i = 0; i < show; i++) {
+                    const [addr, count] = sorted[i];
+                    report += `${i+1}. ${addr} (${count} 次)\n`;
+                }
+                if (sorted.length > 30) report += `... 还有 ${sorted.length - 30} 个地址未显示\n`;
+                report += `\n💡 复制任意地址到「步骤2」追踪它与另一地址间的转账详情。`;
+                
                 showResult('result1', report);
-                setStatus('status1', 'success', `✅ 找到 ${counterparties.size} 个对手地址`);
+                setStatus('status1','success', `✅ 找到 ${sorted.length} 个对手地址 (共 ${allLogs.length} 条转账)`);
             }
         } catch (err) {
             console.error(err);
-            setStatus('status1', 'error', '❌ 查询失败: ' + err.message);
+            setStatus('status1','error','❌ 发生错误: ' + (err.message || err));
         } finally {
-            btn.disabled = false; btn.innerHTML = '🔎 查询该地址的代币交互';
+            btn.disabled = false; btn.innerHTML = '🔎 查询该地址与代币的交互';
         }
     });
-
-    // ── 面板2 ──
+    
+    // ── 面板2：查询两个地址之间的代币转账 ──
     document.getElementById('btn2').addEventListener('click', async () => {
         const addrA = document.getElementById('addrA').value.trim();
         const addrB = document.getElementById('addrB').value.trim();
-        const token2 = document.getElementById('token2').value.trim();
+        const token = document.getElementById('token2').value.trim();
         const fromInput = document.getElementById('from2').value;
         const toInput = document.getElementById('to2').value;
+        
         hideResult('result2');
-        setStatus('status2', '', '');
-
-        if (!addrA || !isValidAddress(addrA)) { setStatus('status2', 'error', '❌ 请输入有效的地址 A'); return; }
-        if (!addrB || !isValidAddress(addrB)) { setStatus('status2', 'error', '❌ 请输入有效的地址 B'); return; }
-
+        hideStatus('status2');
+        
+        if (!isValidAddress(addrA)) { setStatus('status2','error','❌ 请输入有效的地址 A'); return; }
+        if (!isValidAddress(addrB)) { setStatus('status2','error','❌ 请输入有效的地址 B'); return; }
+        if (!isValidAddress(token)) { setStatus('status2','error','❌ 请输入有效的代币合约地址'); return; }
+        
         const btn = document.getElementById('btn2');
         btn.disabled = true; btn.innerHTML = '⏳ 查询中...';
-
+        
         try {
-            const current = await getBlockNumber();
-            let from = fromInput ? parseInt(fromInput) : 0;
-            let to = toInput ? parseInt(toInput) : current;
-            if (isNaN(from)) from = 0;
-            if (isNaN(to) || to > current) to = current;
-            if (from > to) { setStatus('status2', 'error', '起始 > 结束'); btn.disabled = false; btn.innerHTML = '🔎 查询交易'; return; }
-
-            if (token2 && isValidAddress(token2)) {
-                // 代币转账
-                setStatus('status2', 'info', `📡 查询代币 ${token2.slice(0,10)}... 在 ${addrA.slice(0,10)} 和 ${addrB.slice(0,10)} 之间的转账`);
-                const logs = await getTokenLogsBetween(token2, addrA, addrB, from, to);
-                if (logs.length === 0) {
-                    setStatus('status2', 'success', '✅ 未发现代币转账记录');
-                    showResult('result2', '两地址之间无该代币直接转账。');
+            const { from, to } = await parseBlockRange(fromInput, toInput);
+            if (from > to) { setStatus('status2','error','❌ 起始区块不能大于结束区块'); btn.disabled = false; btn.innerHTML = '🔎 查询两地址间代币转账'; return; }
+            
+            setStatus('status2','info', `📡 正在查询 ${addrA.slice(0,10)}... 与 ${addrB.slice(0,10)}... 之间的代币转账`);
+            
+            const topicA = addrToTopic(addrA);
+            const topicB = addrToTopic(addrB);
+            
+            const blockRange = { fromBlock: '0x' + from.toString(16), toBlock: '0x' + to.toString(16) };
+            
+            let logsAB = [], logsBA = [];
+            try {
+                [logsAB, logsBA] = await Promise.all([
+                    rpc('eth_getLogs', [{ address: token, topics: [TRANSFER_TOPIC, topicA, topicB], ...blockRange }]),
+                    rpc('eth_getLogs', [{ address: token, topics: [TRANSFER_TOPIC, topicB, topicA], ...blockRange }])
+                ]);
+            } catch (e) {
+                if (e.message.includes('exceeded') || e.message.includes('too large') || e.message.includes('limit')) {
+                    setStatus('status2','error','❌ 查询范围过大，请缩小范围（建议每次1万~5万个区块）');
                 } else {
-                    let report = `🔁 两地址间代币转账：共 ${logs.length} 笔\n`;
-                    logs.forEach((log, i) => {
-                        const f = '0x' + log.topics[1].slice(26);
-                        const t = '0x' + log.topics[2].slice(26);
-                        const value = parseInt(log.data, 16); // 假设简单代币
-                        report += `${i+1}. ${f} → ${t}  数量: ${value} (wei)\n`;
-                    });
-                    showResult('result2', report);
-                    setStatus('status2', 'success', `✅ 共 ${logs.length} 笔转账`);
+                    setStatus('status2','error','❌ 查询失败: ' + e.message);
                 }
+                btn.disabled = false; btn.innerHTML = '🔎 查询两地址间代币转账';
+                return;
+            }
+            
+            const allLogs = [...(logsAB || []), ...(logsBA || [])];
+            
+            if (allLogs.length === 0) {
+                setStatus('status2','success','✅ 查询完成，未发现两地址间的直接转账');
+                showResult('result2', '两地址之间在所选区块范围内没有该代币的直接转账记录。');
             } else {
-                // BNB 转账提示
-                setStatus('status2', 'info', '⚠️ BNB 原生转账查询需要遍历内部交易，建议使用 BscScan API 或缩小范围手动查看');
-                showResult('result2', '暂不支持 BNB 转账的精确过滤。如需查 BNB，请使用 BscScan 的 Internal Txns 功能。');
+                let report = `🔁 ${addrA} ↔ ${addrB} 之间共 ${allLogs.length} 笔代币转账\n\n`;
+                allLogs.forEach((log, i) => {
+                    const f = extractAddressFromTopic(log.topics[1]);
+                    const t = extractAddressFromTopic(log.topics[2]);
+                    // data字段是uint256的value（十六进制）
+                    const value = BigInt(log.data || '0x0');
+                    const valueEth = Number(value) / 1e18;
+                    const dir = f.toLowerCase() === addrA.toLowerCase() ? 'A → B' : 'B → A';
+                    report += `${i+1}. ${dir} | ${valueEth.toLocaleString(undefined, {maximumFractionDigits: 4})} 枚\n`;
+                    report += `   Tx: ${log.transactionHash}\n`;
+                });
+                showResult('result2', report);
+                setStatus('status2','success', `✅ 共 ${allLogs.length} 笔转账`);
             }
         } catch (err) {
             console.error(err);
-            setStatus('status2', 'error', '❌ 查询失败: ' + err.message);
+            setStatus('status2','error','❌ 发生错误: ' + (err.message || err));
         } finally {
-            btn.disabled = false; btn.innerHTML = '🔎 查询两地址交易';
+            btn.disabled = false; btn.innerHTML = '🔎 查询两地址间代币转账';
         }
     });
+    
+    // ── 初始化：自动填入默认合约地址 ──
+    document.getElementById('tokenAddr').value = '0x5F7dc0E34920Aa46ae8c7519a35D9d54A5f57777';
+    document.getElementById('token2').value = '0x5F7dc0E34920Aa46ae8c7519a35D9d54A5f57777';
 })();
 </script>
 </body>
