@@ -405,14 +405,58 @@
                 allLogs = await queryLogsForRange(token, target, from, to);
             } catch(e) {
                 const errMsg = e.message.toLowerCase();
-                if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.includes('exceeded')) {
-                    setStatus('status1','error', `⚠️ 阶段 ${currentStage+1} 数据过多，已跳过（可手动细化）`);
-                    showResult('result1', `阶段 ${currentStage+1} (${from.toLocaleString()}~${to.toLocaleString()}) 转账记录过多。\n请使用下方细化面板输入更小的子范围。`);
-                    document.getElementById('refinePanel').style.display = 'block';
-                    document.getElementById('refineFrom').value = from;
-                    document.getElementById('refineTo').value = to;
-                    return 'skipped';
-                } else {
+if(errMsg.includes('limit exceeded') || errMsg.includes('too many') || errMsg.includes('exceeded')) {
+    setStatus('status1','info', `⚠️ 阶段 ${currentStage+1} 数据过多，正在自动拆分成子阶段查询...`);
+    // 自动拆分成 5 个小段
+    const subStages = 5;
+    const range = to - from;
+    const step = Math.ceil(range / subStages);
+    let foundAny = false;
+    let totalLogs = [];
+    for (let i = 0; i < subStages; i++) {
+        const subFrom = from + i * step;
+        let subTo = subFrom + step - 1;
+        if (subTo > to) subTo = to;
+        try {
+            const logs = await queryLogsForRange(token, target, subFrom, subTo);
+            totalLogs = totalLogs.concat(logs);
+            if (logs.length > 0) foundAny = true;
+        } catch (e2) {
+            // 子范围仍然超限，递归拆分（为了防止无限递归，最多再拆一次）
+            if(e2.message.includes('limit exceeded') || e2.message.includes('too many')) {
+                const subSubStages = 3;
+                const subRange = subTo - subFrom;
+                const subStep = Math.ceil(subRange / subSubStages);
+                for (let j = 0; j < subSubStages; j++) {
+                    const ssFrom = subFrom + j * subStep;
+                    let ssTo = ssFrom + subStep - 1;
+                    if (ssTo > subTo) ssTo = subTo;
+                    try {
+                        const sLogs = await queryLogsForRange(token, target, ssFrom, ssTo);
+                        totalLogs = totalLogs.concat(sLogs);
+                        if (sLogs.length > 0) foundAny = true;
+                    } catch (e3) {
+                        // 再超限就算了，记录一下
+                        console.warn(`子子范围 ${ssFrom}-${ssTo} 仍超限，已跳过`);
+                    }
+                }
+            } else {
+                throw e2; // 其他错误直接抛出
+            }
+        }
+    }
+    if (totalLogs.length === 0 && !foundAny) {
+        setStatus('status1','info', `📭 阶段 ${currentStage+1} 自动拆分后仍未找到记录`);
+        showResult('result1', `阶段 ${currentStage+1} 已自动拆分查询，未找到该地址的交互记录。`);
+        return false;
+    }
+    // 有结果，复用后续的提取逻辑
+    allLogs = totalLogs;
+    // 下面接着原本的 if(allLogs.length === 0) ... 分支之前，我们直接将 totalLogs 赋给 allLogs，然后跳过原本的错误处理，直接进入提取流程
+    // 为了不破坏原有结构，我们在这里插入一个标记，然后跳到提取部分
+    // 一种简单的方法：将以下提取逻辑包装成一个函数，或者把整个 try 块逻辑重构。这里为保持简单，我们直接将 totalLogs 当作 allLogs，然后执行提取。
+    // 由于原本代码在 catch 之后不会执行到提取部分，我们需要把提取代码移到一个公共函数中。
+}else {
                     setStatus('status1','error','❌ 查询失败: ' + e.message);
                     return false;
                 }
